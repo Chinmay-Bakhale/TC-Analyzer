@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>T&C Analyzer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            width: 400px;
+            min-height: 500px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .api-key-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .api-key-section h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .api-key-input {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .api-key-input:focus {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.5);
+        }
+        
+        .api-key-help {
+            font-size: 12px;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+        
+        .api-key-help a {
+            color: #fff;
+            text-decoration: underline;
+        }
+        
+        .content-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .page-info {
+            margin-bottom: 16px;
+        }
+        
+        .page-info h3 {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .page-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff6b6b;
+        }
+        
+        .status-indicator.detected {
+            background: #51cf66;
+        }
+        
+        .confidence-score {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .analyze-button {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 12px;
+        }
+        
+        .analyze-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+        }
+        
+        .analyze-button:disabled {
+            background: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+            margin: 0 auto 12px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .results-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        .results-section h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .result-content {
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        
+        .export-buttons {
+            display: none;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        
+        .export-button {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .export-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        
+        .error-message {
+            background: rgba(255, 107, 107, 0.2);
+            border: 1px solid rgba(255, 107, 107, 0.4);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            display: none;
+        }
+        
+        .usage-info {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .usage-info h4 {
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+        
+        .scrollbar-custom {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.5) transparent;
+        }
+        
+        .scrollbar-custom::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .scrollbar-custom::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        .scrollbar-custom::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>T&C Analyzer</h1>
+        <p>AI-powered Terms & Conditions Analysis</p>
+    </div>
+    
+    <div class="api-key-section">
+        <h3>🔑 API Configuration</h3>
+        <input type="password" class="api-key-input" id="apiKeyInput" placeholder="Enter your Gemini API key">
+        <div class="api-key-help">
+            Get your free API key from <a href="https://ai.google.dev/" target="_blank">Google AI Studio</a>
+        </div>
+    </div>
+    
+    <div class="content-section">
+        <div class="page-info">
+            <h3>📄 Current Page</h3>
+            <div class="page-status">
+                <div class="status-indicator" id="statusIndicator"></div>
+                <span id="pageStatus">Analyzing page...</span>
+            </div>
+            <div class="confidence-score" id="confidenceScore"></div>
+        </div>
+        
+        <div class="error-message" id="errorMessage"></div>
+        
+        <button class="analyze-button" id="analyzeButton" disabled>
+            Analyze This Page
+        </button>
+        
+        <div class="loading-spinner" id="loadingSpinner">
+            <div class="spinner"></div>
+            <div>Analyzing document with AI...</div>
+        </div>
+    </div>
+    
+    <div class="results-section scrollbar-custom" id="resultsSection">
+        <h3>📋 Analysis Results</h3>
+        <div class="result-content" id="resultContent"></div>
+        <div class="export-buttons" id="exportButtons">
+            <button class="export-button" id="copyButton">📋 Copy</button>
+            <button class="export-button" id="downloadButton">💾 Download</button>
+        </div>
+    </div>
+    
+    <div class="usage-info">
+        <h4>💡 Usage Tips</h4>
+        • Works on Terms of Service, Privacy Policies, and legal documents<br>
+        • Analysis costs ~$0.003-0.01 per document<br>
+        • Your API key is stored securely in your browser
+    </div>
+    
+    <script src="popup.js"></script>
+</body>
+</html>
